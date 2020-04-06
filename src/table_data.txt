@@ -1,0 +1,157 @@
+Drop Table
+
+DROP TABLE hotel CASCADE CONSTRAINTS;
+DROP TABLE room CASCADE CONSTRAINTS;
+DROP TABLE staff CASCADE CONSTRAINTS;
+DROP TABLE manager CASCADE CONSTRAINTS;
+DROP TABLE service CASCADE CONSTRAINTS;
+DROP TABLE front_desk CASCADE CONSTRAINTS;
+DROP TABLE billing CASCADE CONSTRAINTS;
+DROP TABLE customer CASCADE CONSTRAINTS;
+DROP TABLE billing_account CASCADE CONSTRAINTS;
+DROP TABLE check_in CASCADE CONSTRAINTS;
+DROP TABLE service_request CASCADE CONSTRAINTS;
+DROP TABLE service CASCADE CONSTRAINTS;
+
+
+Create Table
+
+CREATE TABLE hotel (
+id INT PRIMARY KEY,
+name NVARCHAR(128) NOT NULL,
+address NVARCHAR(128) NOT NULL,
+city NVARCHAR(64) NOT NULL,
+phone_number NVARCHAR(16) NOT NULL,
+manager_id INT NOT NULL
+);
+
+CREATE TABLE room (
+id INT,
+number INT,
+category NVARCHAR(128) NOT NULL,
+max_occupancy INT NOT NULL,
+rate FLOAT NOT NULL,
+available BOOLEAN NOT NULL,
+CONSTRAINT pk_room PRIMARY KEY(id, number),
+CONSTRAINT fk_room FOREIGN KEY(id) REFERENCES hotel(id) ON DELETE CASCADE
+);
+
+CREATE TABLE staff (
+id INT PRIMARY KEY,
+name NVARCHAR(128) NOT NULL,
+age INT NOT NULL,
+phone_number NVARCHAR(16) NOT NULL,
+title NVARCHAR(128) NOT NULL,
+department NVARCHAR(128) NOT NULL,
+hotel_id INT NOT NULL,
+address NVARCHAR(64) NOT NULL,
+CONSTRAINT fk_staff FOREIGN KEY(hotel_id) REFERENCES hotel(id) ON DELETE CASCADE
+);
+
+CREATE TABLE manager (
+id INT PRIMARY KEY,
+CONSTRAINT fk_manager FOREIGN KEY(id) REFERENCES staff(id) ON DELETE CASCADE
+);
+
+CREATE TABLE service (
+id INT PRIMARY KEY,
+CONSTRAINT fk_service FOREIGN KEY(id) REFERENCES staff(id) ON DELETE CASCADE
+);
+
+CREATE TABLE front_desk (
+id INT PRIMARY KEY,
+CONSTRAINT fk_front_desk FOREIGN KEY(id) REFERENCES staff(id) ON DELETE CASCADE
+);
+
+CREATE TABLE billing (
+id INT PRIMARY KEY,
+CONSTRAINT fk_billing FOREIGN KEY(id) REFERENCES staff(id) ON DELETE CASCADE
+);
+
+CREATE TABLE customer (
+id INT PRIMARY KEY,
+name NVARCHAR(128) NOT NULL,
+dob DATE NOT NULL,
+phone_number NVARCHAR(16),
+email NVARCHAR(128)
+);
+
+CREATE TABLE billing_account (
+cust_id INT PRIMARY KEY,
+ssn NVARCHAR(16) NOT NULL,
+address NVARCHAR(128) NOT NULL,
+payment_type NVARCHAR(16) NOT NULL,
+card_number NVARCHAR(32) 
+);
+
+CREATE TABLE check_in (
+id INT PRIMARY KEY,
+cust_id INT,
+hotel_id INT NOT NULL,
+room_number INT NOT NULL,
+guests INT NOT NULL,
+start_date DATE NOT NULL,
+start_time TIME NOT NULL,
+end_date DATE NOT NULL,
+end_time TIME,
+CONSTRAINT fk_check_in_cust_id FOREIGN KEY(cust_id) REFERENCES customer(id) ON DELETE SET NULL
+);
+
+CREATE TABLE service_request (
+id INT PRIMARY KEY,
+type NVARCHAR(16) NOT NULL,
+rate FLOAT NOT NULL,
+server_id INT,
+check_id INT,
+CONSTRAINT fk_service_req_check_id FOREIGN KEY(check_id) REFERENCES check_in(id) ON DELETE SET NULL
+);
+
+CREATE TABLE service_type (
+id INT PRIMARY KEY,
+type NVARCHAR(32) NOT NULL,
+rate FLOAT NOT NULL
+);
+
+
+Insert
+
+INSERT INTO hotel(id, name, address, city, phone_number, manager_id) VALUES (1, 'Hotel A', '21 ABC St, Raleigh NC 27', 'Raleigh', 919, 100);
+INSERT INTO hotel(id, name, address, city, phone_number, manager_id) VALUES (2, 'Hotel B', '25 XYZ St , Rochester NY 54', 'Rochester', 718, 101); 
+INSERT INTO hotel(id, name, address, city, phone_number, manager_id) VALUES (3, 'Hotel C', '29 PQR St , Greensboro NC 27', 'Greensboro', 984, 102);
+INSERT INTO hotel(id, name, address, city, phone_number, manager_id) VALUES (4, 'Hotel D', '28 GHW St , Raleigh NC 32', 'Raleigh', 920, 105);
+
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (1, 1, 'Economy', 1, 100, TRUE);
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (2, 1, 'Deluxe', 2, 200, TRUE);
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (3, 2, 'Economy', 1, 100, TRUE);
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (2, 3, 'Executive', 3, 1000, TRUE);
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (1, 4, 'Presidential', 4, 5000, TRUE);
+INSERT INTO room(number, id, category, max_occupancy, rate, available) VALUES (5, 1, 'Deluxe', 2, 200, TRUE);
+
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (100, 'Mary', 40, 'Manager', 1, 'Management', '654', '90 ABC St , Raleigh NC 27');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (101, 'John', 45, 'Manager', 2, 'Management', '564', '798 XYZ St , Rochester NY 54');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (102, 'Carol', 55, 'Manager', 3, 'Management', '546', '351 MH St , Greensboro NC 27');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (103, 'Emma', 55, 'Front Desk Staff', 1, 'Management', '546', '49 ABC St , Raleigh NC 27');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (104, 'Ava', 55, 'Catering Staff', 1, 'Catering', '777', '425 RG St , Raleigh NC 27');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (105, 'Peter', 52, 'Manager', 4, 'Management', '724', '475 RG St , Raleigh NC 27');
+INSERT INTO staff(id, name, age, title, hotel_id, department, phone_number, address) VALUES (106, 'Olivia', 27, 'Front Desk Staff', 4, 'Management', '799', '325 PD St , Raleigh NC 27');
+
+INSERT INTO customer(id, name, dob, phone_number, email) VALUES (1001, 'David', '1980-01-30', '123', 'david@gmail.com');
+INSERT INTO customer(id, name, dob, phone_number, email) VALUES (1002, 'Sarah', '1971-01-30', '456', 'sarah@gmail.com');
+INSERT INTO customer(id, name, dob, phone_number, email) VALUES (1003, 'Joseph', '1987-01-30', '789', 'joseph@gmail.com');
+INSERT INTO customer(id, name, dob, phone_number, email) VALUES (1004, 'Lucy', '1985-01-30', '213', 'lucy@gmail.com');
+
+INSERT INTO billing_account(cust_id, ssn, address, payment_type, card_number) VALUES (1001, '593-9846', '980 TRT St , Raleigh NC', 'credit', '1052');
+INSERT INTO billing_account(cust_id, ssn, address, payment_type, card_number) VALUES (1002, '777-8352', '7720 MHT St , Greensboro NC', 'hotel credit', '3020');
+INSERT INTO billing_account(cust_id, ssn, address, payment_type, card_number) VALUES (1003, '858-9430', '231 DRY St , Rochester NY 78', 'credit', '2497');
+INSERT INTO billing_account(cust_id, ssn, address, payment_type, card_number) VALUES (1004, '440-9328', '24 BST Dr , Dallas TX 14', 'cash', NULL);
+
+INSERT INTO check_in(id, cust_id, hotel_id, room_number, guests, start_date, end_date, start_time, end_time) VALUES (1, 1001, 1, 1, 1, '2017-05-10', '2017-05-13', '15:17', '10:22');
+INSERT INTO check_in(id, cust_id, hotel_id, room_number, guests, start_date, end_date, start_time, end_time) VALUES (2, 1002, 1, 2, 2, '2017-05-10', '2017-05-13', '16:11', '9:27');
+INSERT INTO check_in(id, cust_id, hotel_id, room_number, guests, start_date, end_date, start_time, end_time) VALUES (3, 1003, 2, 3, 1, '2016-05-10', '2016-05-14', '15:45', '11:10');
+INSERT INTO check_in(id, cust_id, hotel_id, room_number, guests, start_date, end_date, start_time, end_time) VALUES (4, 1004, 3, 2, 2, '2018-05-10', '2018-05-12', '14:30', '10:00');
+
+INSERT INTO service_request(id, type, rate, server_id, check_id) VALUES (1, 'dry cleaning', 16, NULL, 1);
+INSERT INTO service_request(id, type, rate, server_id, check_id) VALUES (2, 'gyms', 15, NULL, 1);
+INSERT INTO service_request(id, type, rate, server_id, check_id) VALUES (3, 'gyms', 15, NULL, 2);
+INSERT INTO service_request(id, type, rate, server_id, check_id) VALUES (4, 'room service', 10, NULL, 3);
+INSERT INTO service_request(id, type, rate, server_id, check_id) VALUES (5, 'phone bills', 5, NULL, 4);
