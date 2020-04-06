@@ -18,7 +18,7 @@ public class WolfInns {
 	Statement statement = null;
 	ResultSet result = null;
 	
-    // Start program
+	// Start program
 	public static void main(String[] args) {
 		WolfInns wolfinns = new WolfInns();
 		wolfinns.run();
