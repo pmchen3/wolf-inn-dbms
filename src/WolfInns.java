@@ -1241,9 +1241,13 @@ public class WolfInns {
 	
 	// Generate a report for total occupancy.
 	public void generateTotalOccupancy() {
+		String sub_query = "SELECT SUM(check_in.guests) AS Occupancy, (SELECT SUM(room.max_occupancy) FROM room) AS MaxOccupancy "
+				+ "FROM check_in "
+				+ "WHERE check_in.end_time IS NULL";
+		
 		try {
 			result = statement.executeQuery("SELECT a.Occupancy AS TotalOcc, a.MaxOccupancy AS MaxOcc, a.Occupancy / a.MaxOccupancy AS TotalOccupancyPercentage "
-					+ "FROM (SELECT SUM(check_in.guests) AS Occupancy, (SELECT SUM(room.max_occupancy) FROM room) AS MaxOccupancy FROM check_in WHERE check_in.end_time IS NULL)a");
+					+ "FROM (" + sub_query + ")a");
 			
 			System.out.printf("%-15s%-15s%-15s\n", "Total Occ.", "Max Occ.", "Total Occ. Perc.");
 			result.next();
@@ -1361,8 +1365,17 @@ public class WolfInns {
 			System.out.println();
 			
 			// Get total
+			String sub_query1 = "SELECT type, rate, COUNT(type) AS quantity "
+					+ "FROM service_request "
+					+ "WHERE check_id=" + checkin + " "
+					+ "GROUP BY type";
+			
+			String sub_query2 = "SELECT room.category AS type, rate, DATEDIFF(end_date, start_date) AS quantity "
+					+ "FROM (room INNER JOIN check_in ON room.number=check_in.room_number) "
+					+ "WHERE check_in.id=" + checkin + " AND check_in.hotel_id = room.id";
+			
 			result = statement.executeQuery("SELECT SUM(a.rate*a.quantity) AS total "
-					+ "FROM ((SELECT type, rate, COUNT(type) AS quantity FROM service_request WHERE check_id=" + checkin + " GROUP BY type) UNION (SELECT room.category AS type, rate, DATEDIFF(end_date, start_date) AS quantity FROM (room INNER JOIN check_in ON room.number=check_in.room_number) WHERE check_in.id=" + checkin + " AND check_in.hotel_id = room.id))a");
+					+ "FROM ((" + sub_query1 + ") UNION (" + sub_query2 + "))a");
 			
 			System.out.println("Total bill:");
 			result.next();
@@ -1385,9 +1398,24 @@ public class WolfInns {
 		System.out.print("Enter end date (Date): ");
 		end_date = console.nextLine();
 		
+		String sub_query1_1 = "SELECT * "
+				+ "FROM check_in "
+				+ "WHERE check_in.start_date >= '" + start_date + "' AND check_in.end_date <= '" + end_date + "'";
+
+		String sub_query1 = "SELECT type, rate, COUNT(type) AS quantity "
+				+ "FROM (service_request INNER JOIN (" + sub_query1_1 + ")a ON service_request.check_id = a.id) "
+				+ "GROUP BY type";
+
+		// String sub_query2_1 = sub_query1_1;
+
+		String sub_query2 = "SELECT room.category AS type, rate, SUM(DATEDIFF(end_date, start_date)) AS quantity "
+				+ "FROM (room INNER JOIN (" + sub_query1_1 + ")b ON room.number=b.room_number) "
+				+ "WHERE room.id = b.hotel_id "
+				+ "GROUP BY category, rate";
+		
 		try {
 			result = statement.executeQuery("SELECT SUM(c.rate*c.quantity) AS total "
-					+ "FROM ((SELECT type, rate, COUNT(type) AS quantity FROM (service_request INNER JOIN (SELECT * FROM check_in WHERE check_in.start_date >= '" + start_date + "' AND check_in.end_date <= '" + end_date + "')a ON service_request.check_id = a.id) GROUP BY type) UNION (SELECT room.category AS type, rate, SUM(DATEDIFF(end_date, start_date)) AS quantity FROM (room INNER JOIN (SELECT * FROM check_in WHERE check_in.start_date >= '" + start_date + "' AND check_in.end_date <= '" + end_date + "')b ON room.number=b.room_number) WHERE room.id = b.hotel_id GROUP BY category, rate))c");
+					+ "FROM ((" + sub_query1 + ") UNION (" + sub_query2 + "))c");
 			
 			System.out.printf("%-15s\n", "Total Rev.");
 			result.next();
